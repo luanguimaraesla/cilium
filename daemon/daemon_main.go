@@ -503,8 +503,8 @@ func init() {
 	flags.Duration(option.IdentityChangeGracePeriod, defaults.IdentityChangeGracePeriod, "Time to wait before using new identity on endpoint identity change")
 	option.BindEnv(option.IdentityChangeGracePeriod)
 
-	flags.Int(option.IPv4ClusterCIDRMaskSize, 8, "Mask size for the cluster wide CIDR")
-	option.BindEnv(option.IPv4ClusterCIDRMaskSize)
+	flags.Int(option.IPv4ClusterCIDRMaskSizeName, 0, "Mask size for the cluster wide CIDR")
+	option.BindEnv(option.IPv4ClusterCIDRMaskSizeName)
 
 	flags.String(option.IPv4Range, AutoCIDR, "Per-node IPv4 endpoint prefix, e.g. 10.16.0.0/16")
 	option.BindEnv(option.IPv4Range)
@@ -613,6 +613,9 @@ func init() {
 
 	flags.Int(option.MTUName, 0, "Overwrite auto-detected MTU of underlying network")
 	option.BindEnv(option.MTUName)
+
+	flags.Int(option.ExternalMTUName, 0, "Use different MTU for external routes")
+	option.BindEnv(option.ExternalMTUName)
 
 	flags.Bool(option.PrependIptablesChainsName, true, "Prepend custom iptables chains instead of appending")
 	// Leave for backwards compatibility

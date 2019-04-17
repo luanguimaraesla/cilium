@@ -51,6 +51,12 @@ type DaemonConfigurationStatus struct {
 
 	// MTU for network facing routes
 	RouteMTU int64 `json:"routeMTU,omitempty"`
+
+	// External MTU for network facing routes
+	ExternalRouteMTU int64 `json:"externalRouteMTU,omitempty"`
+
+	// Cluster CIDR
+	IPv4ClusterCIDRMaskSize int64 `json:"ipv4ClusterCIDRMaskSize,omitempty"`
 }
 
 // Validate validates this daemon configuration status

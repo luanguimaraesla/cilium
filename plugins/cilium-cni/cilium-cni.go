@@ -250,7 +250,7 @@ func newCNIRoute(r route.Route) *cniTypes.Route {
 	return rt
 }
 
-func prepareIP(ipAddr string, isIPv6 bool, state *CmdState, mtu int) (*cniTypesVer.IPConfig, []*cniTypes.Route, error) {
+func prepareIP(ipAddr string, isIPv6 bool, state *CmdState, mtu int, externalMTU int, ipv4ClusterCidrMaskSize int) (*cniTypesVer.IPConfig, []*cniTypes.Route, error) {
 	var (
 		routes    []route.Route
 		err       error
@@ -274,7 +274,7 @@ func prepareIP(ipAddr string, isIPv6 bool, state *CmdState, mtu int) (*cniTypesV
 		if state.IP4, err = addressing.NewCiliumIPv4(ipAddr); err != nil {
 			return nil, nil, err
 		}
-		if state.IP4routes, err = connector.IPv4Routes(state.HostAddr, mtu); err != nil {
+		if state.IP4routes, err = connector.IPv4CustomMTURoutes(state.HostAddr, mtu, externalMTU, ipv4ClusterCidrMaskSize); err != nil {
 			return nil, nil, err
 		}
 		routes = state.IP4routes
@@ -477,6 +477,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 		return
 	}
 
+	//São dois programas diferentes, esse aqui solicita a informação que pode estar incompleta
 	conf := *configResult.Status
 
 	ep := &models.EndpointChangeRequest{
@@ -570,7 +571,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 	if ipv6IsEnabled(ipam) {
 		ep.Addressing.IPV6 = ipam.Address.IPV6
 
-		ipConfig, routes, err = prepareIP(ep.Addressing.IPV6, true, &state, int(conf.RouteMTU))
+		ipConfig, routes, err = prepareIP(ep.Addressing.IPV6, true, &state, int(conf.RouteMTU), int(conf.ExternalRouteMTU), int(conf.IPv4ClusterCIDRMaskSize))
 		if err != nil {
 			return
 		}
@@ -581,7 +582,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 	if ipv4IsEnabled(ipam) {
 		ep.Addressing.IPV4 = ipam.Address.IPV4
 
-		ipConfig, routes, err = prepareIP(ep.Addressing.IPV4, false, &state, int(conf.RouteMTU))
+		ipConfig, routes, err = prepareIP(ep.Addressing.IPV4, false, &state, int(conf.RouteMTU), int(conf.ExternalRouteMTU), int(conf.IPv4ClusterCIDRMaskSize))
 		if err != nil {
 			return
 		}

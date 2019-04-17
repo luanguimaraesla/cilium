@@ -77,6 +77,12 @@ type Configuration struct {
 	// Similar to StandardMTU, this is a singleton for the process.
 	tunnelMTU int
 
+	// externalMTU is the MTU used for configuring a tunnel mesh for
+	// external-node connectivity
+	//
+	// Similar to StandardMTU, this is a singleton for the process.
+	externalTunnelMTU int
+
 	// encryptMTU is the MTU used for configuratin a encryption route
 	// without tunneling. If tunneling is enabled the tunnelMTU is used
 	// which will include additional encryption overhead if needed.
@@ -90,17 +96,23 @@ type Configuration struct {
 // specified, otherwise it will be automatically detected. if encapEnabled is
 // true, the MTU is adjusted to account for encapsulation overhead for all
 // routes involved in node to node communication.
-func NewConfiguration(authKeySize int, encryptEnabled bool, encapEnabled bool, mtu int) Configuration {
+func NewConfiguration(authKeySize int, encryptEnabled bool, encapEnabled bool, internalMTU int, externalMTU int) Configuration {
 	encryptOverhead := 0
 
-	if mtu == 0 {
+	if internalMTU == 0 {
 		var err error
 
-		mtu, err = autoDetect()
+		internalMTU, err = autoDetect()
 		if err != nil {
 			log.WithError(err).Warning("Unable to automatically detect MTU")
-			mtu = EthernetMTU
+			internalMTU = EthernetMTU
 		}
+	}
+
+	// Use the biggest MTU value as the standard MTU
+	standardMTU := internalMTU
+	if externalMTU > internalMTU {
+		standardMTU = externalMTU
 	}
 
 	if encryptEnabled {
@@ -110,15 +122,20 @@ func NewConfiguration(authKeySize int, encryptEnabled bool, encapEnabled bool, m
 	}
 
 	conf := Configuration{
-		standardMTU:    mtu,
-		tunnelMTU:      mtu - (TunnelOverhead + encryptOverhead),
-		encryptMTU:     mtu - encryptOverhead,
-		encapEnabled:   encapEnabled,
-		encryptEnabled: encryptEnabled,
+		standardMTU:       standardMTU,
+		tunnelMTU:         internalMTU - (TunnelOverhead + encryptOverhead),
+		externalTunnelMTU: externalMTU - (TunnelOverhead + encryptOverhead),
+		encryptMTU:        standardMTU - encryptOverhead,
+		encapEnabled:      encapEnabled,
+		encryptEnabled:    encryptEnabled,
 	}
 
 	if conf.tunnelMTU < 0 {
 		conf.tunnelMTU = 0
+	}
+
+	if conf.externalTunnelMTU < 0 {
+		conf.externalTunnelMTU = 0
 	}
 
 	return conf
@@ -147,6 +164,17 @@ func (c *Configuration) GetRouteMTU() int {
 	}
 
 	return c.tunnelMTU
+}
+
+// GetExternalRouteMTU returns the MTU to be used on the internal external-nodes
+// network. When running in tunneling mode, this will have tunnel overhead
+// accounted for.
+func (c *Configuration) GetExternalRouteMTU() int {
+	if !c.encapEnabled {
+		return c.GetDeviceMTU()
+	}
+
+	return c.externalTunnelMTU
 }
 
 // GetDeviceMTU returns the MTU to be used on workload facing devices.

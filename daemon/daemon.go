@@ -957,7 +957,7 @@ func NewDaemon(dp datapath.Datapath) (*Daemon, *endpointRestoreState, error) {
 		node.SetIPsecKeyIdentity(spi)
 	}
 
-	mtuConfig := mtu.NewConfiguration(authKeySize, option.Config.EnableIPSec, option.Config.Tunnel != option.TunnelDisabled, option.Config.MTU)
+	mtuConfig := mtu.NewConfiguration(authKeySize, option.Config.EnableIPSec, option.Config.Tunnel != option.TunnelDisabled, option.Config.MTU, option.Config.ExternalMTU)
 
 	nodeMngr, err := nodemanager.NewManager("all", dp.Node())
 	if err != nil {
@@ -1048,6 +1048,11 @@ func NewDaemon(dp datapath.Datapath) (*Daemon, *endpointRestoreState, error) {
 		}
 
 		bootstrapStats.k8sInit.End(true)
+	}
+
+	// If no IPv4 cluster CIDR mask size was given, use default
+	if option.Config.IPv4ClusterCIDRMaskSize == 0 {
+		option.Config.IPv4ClusterCIDRMaskSize = defaults.DefaultIPv4ClusterPrefixLen
 	}
 
 	// If the device has been specified, the IPv4AllocPrefix and the
@@ -1486,10 +1491,12 @@ func (h *getConfig) Handle(params GetConfigParams) middleware.Responder {
 			Type:    option.Config.KVStore,
 			Options: option.Config.KVStoreOpt,
 		},
-		Realized:     spec,
-		DeviceMTU:    int64(d.mtuConfig.GetDeviceMTU()),
-		RouteMTU:     int64(d.mtuConfig.GetRouteMTU()),
-		DatapathMode: models.DatapathMode(option.Config.DatapathMode),
+		Realized:                spec,
+		DeviceMTU:               int64(d.mtuConfig.GetDeviceMTU()),
+		RouteMTU:                int64(d.mtuConfig.GetRouteMTU()),
+		ExternalRouteMTU:        int64(d.mtuConfig.GetExternalRouteMTU()),
+		IPv4ClusterCIDRMaskSize: int64(node.GetIPv4ClusterCIDRMaskSize()),
+		DatapathMode:            models.DatapathMode(option.Config.DatapathMode),
 		IpvlanConfiguration: &models.IpvlanConfiguration{
 			MasterDeviceIndex: int64(option.Config.Ipvlan.MasterDeviceIndex),
 			OperationMode:     option.Config.Ipvlan.OperationMode,

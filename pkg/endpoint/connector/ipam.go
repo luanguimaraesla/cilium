@@ -62,6 +62,7 @@ func IPv4Routes(addr *models.NodeAddressing, linkMTU int) ([]route.Route, error)
 	if ip == nil {
 		return []route.Route{}, fmt.Errorf("Invalid IP address: %s", addr.IPV4.IP)
 	}
+
 	return []route.Route{
 		{
 			Prefix: net.IPNet{
@@ -73,6 +74,42 @@ func IPv4Routes(addr *models.NodeAddressing, linkMTU int) ([]route.Route, error)
 			Prefix:  defaults.IPv4DefaultRoute,
 			Nexthop: &ip,
 			MTU:     linkMTU,
+		},
+	}, nil
+}
+
+// IPv4CustomMTURoutes returns IPv4 routes with different MTU values for internal and external traffic
+// to be installed in endpoint's networking namespace.
+func IPv4CustomMTURoutes(addr *models.NodeAddressing, internalLinkMTU int, externalLinkMTU int, ipv4ClusterCidrMaskSize int) ([]route.Route, error) {
+	if externalLinkMTU == 0 {
+		return IPv4Routes(addr, internalLinkMTU)
+	}
+
+	ip := net.ParseIP(addr.IPV4.IP)
+	if ip == nil {
+		return []route.Route{}, fmt.Errorf("Invalid IP address: %s", addr.IPV4.IP)
+	}
+
+	clusterMask := net.CIDRMask(ipv4ClusterCidrMaskSize, 32)
+	return []route.Route{
+		{
+			Prefix: net.IPNet{
+				IP:   ip,
+				Mask: defaults.ContainerIPv4Mask,
+			},
+		},
+		{
+			Prefix:  defaults.IPv4DefaultRoute,
+			Nexthop: &ip,
+			MTU:     externalLinkMTU,
+		},
+		{
+			Prefix: net.IPNet{
+				IP:   ip.Mask(clusterMask),
+				Mask: clusterMask,
+			},
+			Nexthop: &ip,
+			MTU:     internalLinkMTU,
 		},
 	}, nil
 }

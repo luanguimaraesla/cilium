@@ -30,48 +30,76 @@ var _ = Suite(&MTUSuite{})
 
 func (m *MTUSuite) TestNewConfiguration(c *C) {
 	// Add routes with no encryption or tunnel
-	conf := NewConfiguration(0, false, false, 0)
+	conf := NewConfiguration(0, false, false, 0, 0)
 	c.Assert(conf.GetDeviceMTU(), Not(Equals), 0)
 	c.Assert(conf.GetRouteMTU(), Equals, conf.GetDeviceMTU())
 
 	// Add routes with no encryption or tunnel and set MTU
-	conf = NewConfiguration(0, false, false, 1400)
+	conf = NewConfiguration(0, false, false, 1400, 0)
 	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
 	c.Assert(conf.GetRouteMTU(), Equals, conf.GetDeviceMTU())
+	c.Assert(conf.GetExternalRouteMTU(), Equals, 0)
 
-	// Add routes with tunnel
-	conf = NewConfiguration(0, false, true, 1400)
-	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
-	c.Assert(conf.GetRouteMTU(), Equals, conf.GetDeviceMTU()-TunnelOverhead)
+	// Add routes with no encryption or tunnel and set ExternalMTU
+	conf = NewConfiguration(0, false, false, 0, 1400)
+	c.Assert(conf.GetDeviceMTU(), Not(Equals), 0)
+	c.Assert(conf.GetExternalRouteMTU(), Equals, conf.GetDeviceMTU())
+
+	// Add routes with no encryption or tunnel and set ExternalMTU > MTU
+	conf = NewConfiguration(0, false, false, 1300, 1400)
+	c.Assert(conf.GetExternalRouteMTU(), Equals, conf.GetDeviceMTU())
+
+	// Add routes with no encryption or tunnel and set MTU > ExternalMTU
+	conf = NewConfiguration(0, false, false, 1400, 1300)
+	c.Assert(conf.GetRouteMTU(), Equals, conf.GetDeviceMTU())
 
 	// Add routes with tunnel and set MTU
-	conf = NewConfiguration(0, false, true, 1400)
+	conf = NewConfiguration(0, false, true, 1400, 0)
 	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
 	c.Assert(conf.GetRouteMTU(), Equals, conf.GetDeviceMTU()-TunnelOverhead)
+	c.Assert(conf.GetExternalRouteMTU(), Equals, 0)
+
+	// Add routes with tunnel and set ExternalMTU
+	conf = NewConfiguration(0, false, true, 0, 1400)
+	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
+	c.Assert(conf.GetExternalRouteMTU(), Equals, conf.GetDeviceMTU()-TunnelOverhead)
 
 	// Add routes with encryption and set MTU using standard 128bit, larger 256bit and smaller 96bit ICVlen keys
-	conf = NewConfiguration(16, true, false, 1400)
+	conf = NewConfiguration(16, true, false, 1400, 0)
 	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
 	c.Assert(conf.GetRouteMTU(), Equals, conf.GetDeviceMTU()-EncryptionIPsecOverhead)
 
-	conf = NewConfiguration(32, true, false, 1400)
+	conf = NewConfiguration(32, true, false, 1400, 0)
 	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
 	c.Assert(conf.GetRouteMTU(), Equals, conf.GetDeviceMTU()-(EncryptionIPsecOverhead+16))
 
-	conf = NewConfiguration(12, true, false, 1400)
+	conf = NewConfiguration(12, true, false, 1400, 0)
 	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
 	c.Assert(conf.GetRouteMTU(), Equals, conf.GetDeviceMTU()-(EncryptionIPsecOverhead-4))
 
-	// Add routes with encryption and tunnels using standard 128bit, larger 256bit and smaller 96bit ICVlen keys
-	conf = NewConfiguration(16, true, true, 1400)
+	// Add routes with encryption and set ExternalMTU using standard 128bit, larger 256bit and smaller 96bit ICVlen keys
+	conf = NewConfiguration(16, true, false, 0, 1400)
 	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
-	c.Assert(conf.GetRouteMTU(), Equals, conf.GetDeviceMTU()-(TunnelOverhead+EncryptionIPsecOverhead))
+	c.Assert(conf.GetExternalRouteMTU(), Equals, conf.GetDeviceMTU()-EncryptionIPsecOverhead)
 
-	conf = NewConfiguration(32, true, true, 1400)
+	conf = NewConfiguration(32, true, false, 0, 1400)
 	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
-	c.Assert(conf.GetRouteMTU(), Equals, conf.GetDeviceMTU()-(TunnelOverhead+EncryptionIPsecOverhead+16))
+	c.Assert(conf.GetExternalRouteMTU(), Equals, conf.GetDeviceMTU()-(EncryptionIPsecOverhead+16))
 
-	conf = NewConfiguration(32, true, true, 1400)
+	conf = NewConfiguration(12, true, false, 0, 1400)
 	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
-	c.Assert(conf.GetRouteMTU(), Equals, conf.GetDeviceMTU()-(TunnelOverhead+EncryptionIPsecOverhead+16))
+	c.Assert(conf.GetExternalRouteMTU(), Equals, conf.GetDeviceMTU()-(EncryptionIPsecOverhead-4))
+
+	// Add routes with encryption, tunnels and set ExternalMTU using standard 128bit, larger 256bit and smaller 96bit ICVlen keys
+	conf = NewConfiguration(16, true, true, 0, 1400)
+	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
+	c.Assert(conf.GetExternalRouteMTU(), Equals, conf.GetDeviceMTU()-(TunnelOverhead+EncryptionIPsecOverhead))
+
+	conf = NewConfiguration(32, true, true, 0, 1400)
+	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
+	c.Assert(conf.GetExternalRouteMTU(), Equals, conf.GetDeviceMTU()-(TunnelOverhead+EncryptionIPsecOverhead+16))
+
+	conf = NewConfiguration(32, true, true, 0, 1400)
+	c.Assert(conf.GetDeviceMTU(), Equals, 1400)
+	c.Assert(conf.GetExternalRouteMTU(), Equals, conf.GetDeviceMTU()-(TunnelOverhead+EncryptionIPsecOverhead+16))
 }

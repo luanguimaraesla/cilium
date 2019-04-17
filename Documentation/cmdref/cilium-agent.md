@@ -51,6 +51,7 @@ cilium-agent [flags]
       --encrypt-interface string                   Transparent encryption interface
       --endpoint-queue-size int                    size of EventQueue per-endpoint (default 25)
       --envoy-log string                           Path to a separate Envoy log file, if any
+      --external-mtu int                           Use different MTU for external routes
       --fixed-identity-mapping map                 Key-value for the fixed identity mapping which allows to use reserved label for fixed identities (default map[])
       --flannel-manage-existing-containers         Installs a BPF program to allow for policy enforcement in already running containers managed by Flannel. Require Cilium to be running in the hostPID.
       --flannel-master-device string               Installs a BPF program to allow for policy enforcement in the given network interface. Allows to run Cilium on top of other CNI plugins that provide networking, e.g. flannel, where for flannel, this value should be set with 'cni0'. [EXPERIMENTAL]
@@ -64,7 +65,7 @@ cilium-agent [flags]
       --identity-change-grace-period duration      Time to wait before using new identity on endpoint identity change (default 5s)
       --install-iptables-rules                     Install base iptables rules for cilium to mainly interact with kube-proxy (and masquerading) (default true)
       --ipsec-key-file string                      Path to IPSec key file
-      --ipv4-cluster-cidr-mask-size int            Mask size for the cluster wide CIDR (default 8)
+      --ipv4-cluster-cidr-mask-size int            Mask size for the cluster wide CIDR
       --ipv4-node string                           IPv4 address of node (default "auto")
       --ipv4-range string                          Per-node IPv4 endpoint prefix, e.g. 10.16.0.0/16 (default "auto")
       --ipv4-service-range string                  Kubernetes IPv4 services CIDR if not inside cluster prefix (default "auto")

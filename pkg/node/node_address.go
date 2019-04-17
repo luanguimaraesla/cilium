@@ -138,6 +138,11 @@ func GetIPv4ClusterRange() *net.IPNet {
 	}
 }
 
+// GetIPv4ClusterMask returns the IPv4 network mask of the cluster
+func GetIPv4ClusterCIDRMaskSize() int {
+	return ipv4ClusterCidrMaskSize
+}
+
 // GetIPv4Loopback returns the loopback IPv4 address of this node.
 func GetIPv4Loopback() net.IP {
 	return ipv4Loopback
