@@ -127,8 +127,8 @@ const (
 	// which allows to use reserved label for fixed identities
 	FixedIdentityMapping = "fixed-identity-mapping"
 
-	// IPv4ClusterCIDRMaskSizeName is the name of mask size option for the cluster wide CIDR
-	IPv4ClusterCIDRMaskSizeName = "ipv4-cluster-cidr-mask-size"
+	// IPv4ClusterCIDRMaskSize is the name of mask size option for the cluster wide CIDR
+	IPv4ClusterCIDRMaskSize = "ipv4-cluster-cidr-mask-size"
 
 	// IPv4Range is the per-node IPv4 endpoint prefix, e.g. 10.16.0.0/16
 	IPv4Range = "ipv4-range"
@@ -984,11 +984,6 @@ func (c *DaemonConfig) Validate() error {
 		return fmt.Errorf("ExternalMTU '%d' cannot be negative", c.ExternalMTU)
 	}
 
-	if c.IPv4ClusterCIDRMaskSize == 0 && c.ExternalMTU != 0 {
-		return fmt.Errorf("you must declare option --%s in order to use --%s",
-			IPv4ClusterCIDRMaskSizeName, ExternalMTUName)
-	}
-
 	switch c.Tunnel {
 	case TunnelVXLAN, TunnelGeneve, "":
 	case TunnelDisabled:
@@ -1139,7 +1134,7 @@ func (c *DaemonConfig) Populate() {
 	c.HTTPRequestTimeout = viper.GetInt(HTTPRequestTimeout)
 	c.HTTPRetryCount = viper.GetInt(HTTPRetryCount)
 	c.HTTPRetryTimeout = viper.GetInt(HTTPRetryTimeout)
-	c.IPv4ClusterCIDRMaskSize = viper.GetInt(IPv4ClusterCIDRMaskSizeName)
+	c.IPv4ClusterCIDRMaskSize = viper.GetInt(IPv4ClusterCIDRMaskSize)
 	c.IdentityChangeGracePeriod = viper.GetDuration(IdentityChangeGracePeriod)
 	c.IPv4Range = viper.GetString(IPv4Range)
 	c.IPv4NodeAddr = viper.GetString(IPv4NodeAddr)

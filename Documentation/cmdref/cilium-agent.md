@@ -65,7 +65,7 @@ cilium-agent [flags]
       --identity-change-grace-period duration      Time to wait before using new identity on endpoint identity change (default 5s)
       --install-iptables-rules                     Install base iptables rules for cilium to mainly interact with kube-proxy (and masquerading) (default true)
       --ipsec-key-file string                      Path to IPSec key file
-      --ipv4-cluster-cidr-mask-size int            Mask size for the cluster wide CIDR
+      --ipv4-cluster-cidr-mask-size int            Mask size for the cluster wide CIDR (default 8)
       --ipv4-node string                           IPv4 address of node (default "auto")
       --ipv4-range string                          Per-node IPv4 endpoint prefix, e.g. 10.16.0.0/16 (default "auto")
       --ipv4-service-range string                  Kubernetes IPv4 services CIDR if not inside cluster prefix (default "auto")
